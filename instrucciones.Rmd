@@ -13,9 +13,57 @@ Juan Zamora O.
 </p>
 </center>
 
-El objetivo de este documento es introducir el problema a resolver en la Consultoría.
+## Introducción
 
-```{r load-packages, include=FALSE}
+El principal objetivo del Curso es *exponer a los alumnos* a una *experiencia de consultoría real*. 
+Por lo tanto, el foco está puesto en resolver un problema mediante las herramientas adquiridas en el 
+transcurso del Programa. Para poner esto en practica, cada uno de los 3 módulos 
+consistirá en resolver (por parte de Uds.) un problema.
+
+### Acerca de la evaluación general
+
+Cada profesor evaluará el trabajo realizado en su módulo y con ello entregará una nota. Para el cálculo 
+de la nota final se realizará un promedio simple de estas 3 notas. 
+
+
+### Acerca de la modalidad de trabajo y evaluación de este módulo
+
+
+El trabajo será realizado en ~grupos~ equipos. No habrá entrega de contenidos conceptuales. En clases, 
+el profesor se irá reuniendo con los grupos para discutir y orientar los avances alcanzados. 
+
+**Será necesario que cada grupo tenga avances antes de cada sesión**. La idea de esto es que 
+exista un insumo que motive la discusión dentro de cada grupo y participación del Profesor.
+
+La nota final de este módulo consistirá del promedio entre dos notas parciales: Una asociada al informe final y otra a la presentación final. La nota del informe
+se replica para todos los miembros del equipo. En la presentación final, cada miembro deberá exponer y recibirá su nota
+de acuerdo a lo observado por el Profesor. La ausencia de exposición tendrá nota mínima.
+
+
+## El problema de la Recomendación
+
+El escenario que ustedes deberan enfrentar es aquel en que dado un usuario, su historia de preferencias y la información de otros usuarios, se requiere entregarle "buenas" sugerencias. Estas sugerencias deben ser coherentes con los gustos del usuario y para ello deberan ser obtenidas algún tipo de criterio. *Por ejemplo*, este criterio puede considerar aquellos ítems que maximizacen de la valoración esperada por parte del usuario o que tengan información textual (tags por ejemplo) que se aleje minimamente de aquella asociada al usuario.
+
+Ejemplos de este problema pueden observarse en muchos dominios distintos. Por ejemplo, recomendación de productos a usuarios en sitios de ventas en línea (amazon, ebay, falabella on-line ...), recomendación de contenido en plataformas multimedia que consiga mantener a los usuarios "consumiendo". El insumo (*input*) para este tipo de métodos consiste de información relativa a los usuarios, ítems, contextos de consumo y retroalimentación de los usuarios luego de interactuar con los ítems.
+
+## Conjunto de datos
+
+Se tiene una base de datos con información de películas (título, año, genero ...) y
+también de valoraciones de los usuarios (puntuación y etiquetas asignadas).
+
+### Descarga del conjunto de datos
+
+```{r}
+dl <- paste(tempfile(),".zip",sep = "")
+download.file("http://files.grouplens.org/datasets/movielens/ml-latest-small.zip", dl)
+unzip(dl, list = TRUE) # shows the content
+unzip(dl, exdir = getwd()) # extracts into the working dir.
+rm(dl)
+```
+
+### Librerías necesarias para los ejemplos
+
+```{r load-packages, include=TRUE}
 library(tidyr)
 library(scales)
 library(lubridate)
@@ -24,22 +72,23 @@ library(ggplot2)
 library(dplyr)
 library(caret)
 library(lubridate)
+```
 
-## Reading the data
+### Carga de los datos
+
+Luego de revisar y ejecutar el script `descarga_dataset.R`, se dispondrá de 3 archivos:
+```{r}
+
+# Lectura de cada uno de los 3 archivos
 ratings <- read.csv("ml-latest-small/ratings.csv")
 movies <- read.csv("ml-latest-small/movies.csv")
 tags <- read.csv("ml-latest-small/tags.csv")
 
 
-# joining all the data
+# Unión de todos los archivos para  poder ejecutar los ejemplos 
+# (no tiene porque seguir esto mismo en su propuesta)
 movielens <- left_join(ratings, movies, by = "movieId")
 ```
-
-## Conjunto de datos
-
-Se tiene una base de datos con información de películas (título, año, genero ...) y
-también de valoraciones de los usuarios (puntuación y etiquetas asignadas).
-
 ### Periodo de tiempo comprendido
 
 ```{r}
@@ -118,7 +167,7 @@ movielens %>% group_by(movieId) %>%
   theme_fivethirtyeight()
 ```
 
-### Sparseness en la asociación de usuarios y películas valoradas
+### _Sparsity_ en la asociación de usuarios y películas valoradas
 
 ```{r}
 users <- sample(unique(movielens$userId), 100)
@@ -132,13 +181,10 @@ abline(h=0:100+0.5, v=0:100+0.5, col = "grey")
 title("Matriz de Usuarios vs Películas")
 ```
 
-## El problema de la Recomendación
-
-**TODO** _Agregar basandose en libro_
+## Evaluación de recomendaciones
 
 Consideremos la matriz sparse presentada antes.
 
-### Evaluación de recomendaciones
 
 Para evaluar la calidad de las recomendaciones realizadas por cualquier método que 
 construyamos utilizaremos una estrategia _de validación cruzada *Hold-out*. 
@@ -290,3 +336,16 @@ result <- bind_rows(result,
 
 result
 ```
+
+## Referencias útiles
+
+Relacionadas con Sistemas de Recomendación:
+
+* [Recommender Systems: The Textbook ](https://amzn.to/3ioS6gi). Aggarwal, C., 2016. [(descargar)](https://bit.ly/3iukxtd)
+* [Recommender Systems: An Introduction](https://amzn.to/3kI5vCf). Jannach et al., 2011. [(descargar)](https://bit.ly/2XPmk46) (ver cáp.II)
+* [Statistical Methods for Recommender Systems](https://www.amazon.com/-/es/Deepak-K-Agarwal/dp/1107036070). Agarwal, D., & Chen, B., 2016. (ver sec. 2.4)
+
+Otras complementarias:
+
+* [Machine Learning with R](https://www.springer.com/gp/book/9789811068072). Ghatak, A., 2017. [(Descargar)](https://bit.ly/3ium56v)(ver cáp. I)
+
