@@ -18,6 +18,8 @@ library(ggthemes)
 library(ggplot2)
 library(dplyr)
 library(caret)
+library(lubridate)
+
 
 # download movie data and extrat into the working dir.
 dl <- paste(tempfile(),".zip",sep = "")
@@ -92,7 +94,6 @@ rm(test_index, temp, removed)
 ##################
 # Some data exploration
 # getting initial, final dates and the total period in years.
-library(lubridate)
 tibble(`Initial Date` = date(as_datetime(min(edx$timestamp), origin="1970-01-01")),
        `Final Date` = date(as_datetime(max(edx$timestamp), origin="1970-01-01"))) %>%
   mutate(Period = duration(max(edx$timestamp)-min(edx$timestamp)))
