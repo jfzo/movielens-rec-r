@@ -1,11 +1,19 @@
 ---
-title: "Taller de Consultoría - Módulo 1"
-output: html_document
+title: ""
+output:
+  html_document:
+    df_print: paged
+    includes:
+      in_header: header.html
 ---
+<center>
+<p style="text-align: center;">
+<h2> Módulo 1</h2>
+Juan Zamora O.
+</p>
+</center>
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+El objetivo de este documento es introducir el problema a resolver en la Consultoría.
 
 ```{r load-packages, include=FALSE}
 library(tidyr)
@@ -26,26 +34,22 @@ tags <- read.csv("ml-latest-small/tags.csv")
 # joining all the data
 movielens <- left_join(ratings, movies, by = "movieId")
 ```
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
-
-## Modelo 1
+## Conjunto de datos
 
 Se tiene una base de datos con información de películas (título, año, genero ...) y
 también de valoraciones de los usuarios (puntuación y etiquetas asignadas).
 
-## Algunas exploraciones
+### Periodo de tiempo comprendido
 
 ```{r}
-tibble(`Initial Date` = date(as_datetime(min(movielens$timestamp), origin="1970-01-01")),
-       `Final Date` = date(as_datetime(max(movielens$timestamp), origin="1970-01-01"))) %>%
-  mutate(Period = duration(max(movielens$timestamp)-min(movielens$timestamp)))
+tibble(`Fecha inicial` = date(as_datetime(min(movielens$timestamp), origin="1970-01-01")),
+       `Fecha final` = date(as_datetime(max(movielens$timestamp), origin="1970-01-01"))) %>%
+  mutate(Periodo = duration(max(movielens$timestamp)-min(movielens$timestamp)))
 ```
 
-Número de valoraciones por año
+
+### Valoraciones por año
 
 
 ```{r}
@@ -53,14 +57,14 @@ Número de valoraciones por año
 movielens %>% mutate(year = year(as_datetime(timestamp, origin="1970-01-01"))) %>%
   ggplot(aes(x=year)) +
   geom_histogram(color = "white") + 
-  ggtitle("Número de valoraciones por año") +
+  ggtitle("Cantidad de valoraciones por año") +
   xlab("Año") +
-  ylab("Número de Valoraciones") +
+  ylab("Cantidad de Valoraciones") +
   scale_y_continuous(labels = comma) + 
   theme_fivethirtyeight()
 ``` 
 
-**Frecuencia de cada una de las Valoraciones**
+### Ítem de la escala de Valoraciones
 
 ```{r}
 movielens %>% group_by(rating) %>% summarize(n=n())
@@ -81,7 +85,8 @@ movielens %>% group_by(rating) %>%
   theme_fivethirtyeight()
 
 ```
-**Cantidad de Valoraciones por película**
+
+### Valoraciones por película
 
 
 ```{r}
@@ -97,7 +102,7 @@ movielens %>% group_by(movieId) %>%
   theme_fivethirtyeight()
 ```
 
-**Valoraciones por usuario**
+### Valoraciones por usuario
 
 ```{r}
  movielens  %>% group_by(userId) %>%
@@ -113,7 +118,7 @@ movielens %>% group_by(movieId) %>%
   theme_fivethirtyeight()
 ```
 
-**Sparseness en la asociación de usuarios y películas valoradas**
+### Sparseness en la asociación de usuarios y películas valoradas
 
 ```{r}
 users <- sample(unique(movielens$userId), 100)
@@ -126,4 +131,162 @@ movielens %>% filter(userId %in% users) %>%
 abline(h=0:100+0.5, v=0:100+0.5, col = "grey")
 title("Matriz de Usuarios vs Películas")
 ```
+
 ## El problema de la Recomendación
+
+**TODO** _Agregar basandose en libro_
+
+Consideremos la matriz sparse presentada antes.
+
+### Evaluación de recomendaciones
+
+Para evaluar la calidad de las recomendaciones realizadas por cualquier método que 
+construyamos utilizaremos una estrategia _de validación cruzada *Hold-out*. 
+Para implementar esta estrategia deberemos dividir (al azar) los datos (las valoraciones)
+en $3$ partes: Entrenamiento ($\%80$), Prueba ($\%10$) y Validación ($\%10$).
+
+```{r}
+set.seed(1)
+
+val_index <- createDataPartition(y = movielens$rating, 
+                                  times = 1, p = 0.1, list = FALSE)
+tr_tst_set <- movielens[-val_index,]
+temp <- movielens[val_index,]
+
+# Nos aseguramos de que cada usuario y cada película esten en ambos segmentos
+validation <- temp %>% 
+  semi_join(tr_tst_set, by = "movieId") %>%
+  semi_join(tr_tst_set, by = "userId")
+
+# Agregamos lo que fue filtrado del segmento de validacion al set de entr. y prueba
+removed <- anti_join(temp, validation)
+tr_tst_set <- rbind(tr_tst_set, removed)
+```
+
+
+Para continuar con la generación del conjunto de entrenamiento y prueba, deberemos dividir `tr_tst_set` en dos partes (entrenamiento y prueba). 
+
+
+```{r}
+
+# Entrenamiento 90% y prueba 10% (a partir del segmento que contenía el 90% de los datos).
+set.seed(1)
+test_index <- createDataPartition(y = tr_tst_set$rating, times = 1, p = 0.1, list = FALSE)
+train_set <- tr_tst_set[-test_index,]
+temp <- tr_tst_set[test_index,]
+
+# Make sure userId and movieId in test set are also in train set
+test_set <- temp %>% 
+  semi_join(train_set, by = "movieId") %>%
+  semi_join(train_set, by = "userId")
+
+# Add rows removed from test set back into train set
+removed <- anti_join(temp, test_set)
+train_set <- rbind(train_set, removed)
+
+
+rm(val_index, test_index, tr_tst_set, temp, removed)
+```
+
+#### Entrenando y midiendo la calidad de los modelos
+
+**Primero**, la calidad de las recomendaciones será medida mediante el *Error absoluto promedio* y la [*raíz del error cuadrático medio*](https://es.wikipedia.org/wiki/Ra%C3%ADz_del_error_cuadr%C3%A1tico_medio). 
+
+```{r}
+MAE <- function(true_ratings, predicted_ratings){
+  mean(abs(true_ratings - predicted_ratings))
+}
+
+MSE <- function(true_ratings, predicted_ratings){
+  mean((true_ratings - predicted_ratings)^2)
+}
+
+RMSE <- function(true_ratings, predicted_ratings){
+  sqrt(mean((true_ratings - predicted_ratings)^2))
+}
+```
+
+**Entonces**, para construir cualquier modelo se usará el segmento de entrenamiento. Luego, para seleccionar aquella configuración de parámetros que permite obtener el mejor modelo se usará el segmento de prueba.
+
+**Finalmente**, para evaluar la capacidad de generalización de cada modelo seleccionado se usará el segmento de validación.
+
+### Modelo lineal constante $\hat{y}=\mu$
+
+```{r}
+# Promedio de las valoraciones observadas
+mu <- mean(train_set$rating)
+
+# Se llena la tabla de resultados (irá cambiando al agregar más modelos)
+result <- bind_rows(tibble(Método = "Mu", 
+                           RMSE = RMSE(test_set$rating, mu),
+                           MSE  = MSE(test_set$rating, mu),
+                           MAE  = MAE(test_set$rating, mu)))
+result
+```
+
+### Modelo lineal constante $\hat{y}=\mu + b_i$
+
+Se considera el sesgo en las valoraciones propio de cada película (hay películas más populares que otras).
+
+```{r}
+# efecto de cada película (bi)
+bi <- train_set %>% 
+  group_by(movieId) %>% 
+  summarize(b_i = mean(rating - mu))
+
+head(bi)
+
+# Visualización del sesgo de las películas
+bi %>% ggplot(aes(x = b_i)) + 
+  geom_histogram(bins=10, col = I("black")) +
+  ggtitle("Distribución del efecto de las películas") +
+  xlab("efecto") +
+  ylab("Cantidad") +
+  scale_y_continuous(labels = comma) + 
+  theme_fivethirtyeight()
+```
+
+Predicciones con  $\mu + bi$
+
+```{r}
+y_hat_bi <- mu + (test_set %>% 
+  left_join(bi, by = "movieId") %>% 
+  .$b_i)
+
+# Se calculan medidas de error y se actualiza la tabla  
+result <- bind_rows(result, 
+                    tibble(Método = "Mu + bi", 
+                           RMSE = RMSE(test_set$rating, y_hat_bi),
+                           MSE  = MSE(test_set$rating, y_hat_bi),
+                           MAE  = MAE(test_set$rating, y_hat_bi)))
+
+result
+```
+
+### Modelo lineal constante $\hat{y}=\mu + b_i + b_u$
+
+Se considering el sesgo de los usuarios.
+
+```{r}
+# Efecto de cada usuario (bu)
+bu <- train_set %>% 
+  left_join(bi, by = 'movieId') %>%
+  group_by(userId) %>%
+  summarize(b_u = mean(rating - mu - b_i))
+
+# Predicciones
+y_hat_bi_bu <- test_set %>% 
+  left_join(bi, by='movieId') %>%
+  left_join(bu, by='userId') %>%
+  mutate(pred = mu + b_i + b_u) %>%
+  .$pred
+
+# Se calculan medidas de error y se actualiza la tabla  
+result <- bind_rows(result, 
+                    tibble(Método = "Mu + bi + bu", 
+                           RMSE = RMSE(test_set$rating, y_hat_bi_bu),
+                           MSE  = MSE(test_set$rating, y_hat_bi_bu),
+                           MAE  = MAE(test_set$rating, y_hat_bi_bu)))
+
+result
+```

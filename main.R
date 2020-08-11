@@ -41,7 +41,7 @@ tags <- read.csv("ml-latest-small/tags.csv")
 movielens <- left_join(ratings, movies, by = "movieId")
 
 # 'Validation' set will be 10% of MovieLens data
-set.seed(1, sample.kind="Rounding")
+set.seed(1, sample.kind="Rounding") # rounding permite obtener misma secuencia en distintas versiones de R.
 
 test_index <- createDataPartition(y = movielens$rating, 
                                   times = 1, p = 0.1, list = FALSE)
