@@ -13,6 +13,12 @@ El escenario que ustedes deberan enfrentar es aquel en que dado un usuario, su h
 
 Ejemplos de este problema pueden observarse en muchos dominios distintos. Por ejemplo, recomendación de productos a usuarios en sitios de ventas en línea (amazon, ebay, falabella on-line ...), recomendación de contenido en plataformas multimedia que consiga mantener a los usuarios "consumiendo". El insumo (*input*) para este tipo de métodos consiste de información relativa a los usuarios, ítems, contextos de consumo y retroalimentación de los usuarios luego de interactuar con los ítems.
 
+## Instalación de este Proyecto
+
+* Descargar o clonar el Proyecto
+* Ejecutar R. (Esto descargará automáticamente el package `renv`
+* Dentro del intérprete se debe ejecutar: `renv::restore()`
+
 ## Conjunto de datos
 
 Se tiene una base de datos con información de películas (título, año, genero ...) y
