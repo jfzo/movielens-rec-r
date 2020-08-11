@@ -16,7 +16,7 @@ Ejemplos de este problema pueden observarse en muchos dominios distintos. Por ej
 ## Instalación de este Proyecto
 
 * Descargar o clonar el Proyecto
-* Ejecutar R. (Esto descargará automáticamente el package `renv`
+* Ejecutar R. (Esto descargará automáticamente el [package `renv`](https://rstudio.github.io/renv/) 
 * Dentro del intérprete se debe ejecutar: `renv::restore()`
 
 ## Conjunto de datos
