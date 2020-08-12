@@ -40,6 +40,13 @@ se replica para todos los miembros del equipo. En la presentación final, cada m
 de acuerdo a lo observado por el Profesor. La ausencia de exposición tendrá nota mínima.
 
 
+**Deadlines**: 
+
+* Lunes 24.08 entrega del informe (formato escogido por cada equipo)
+* Martes 25.08 Presentación final. 
+  * 20 minutos para cada equipo.
+  * Orden de presentaciones será definido al empezar esa sesión.
+
 ## El problema de la Recomendación
 
 El escenario que ustedes deberan enfrentar es aquel en que dado un usuario, su historia de preferencias y la información de otros usuarios, se requiere entregarle "buenas" sugerencias. Estas sugerencias deben ser coherentes con los gustos del usuario y para ello deberan ser obtenidas algún tipo de criterio. *Por ejemplo*, este criterio puede considerar aquellos ítems que maximizacen de la valoración esperada por parte del usuario o que tengan información textual (tags por ejemplo) que se aleje minimamente de aquella asociada al usuario.
